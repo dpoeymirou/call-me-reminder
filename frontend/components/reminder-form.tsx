@@ -59,7 +59,7 @@ export function ReminderForm() {
       ...data,
       scheduled_time: `${data.scheduled_time}:00`,
     };
-    console.log("Sending data:", data);
+
     createReminder(payload, {
       onSuccess: () => {
         toast.success("Reminder created successfully!");

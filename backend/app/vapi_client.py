@@ -5,6 +5,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 VAPI_API_KEY = os.getenv("VAPI_API_KEY")
+VAPI_PHONE_NUMBER_ID = os.getenv("VAPI_PHONE_NUMBER_ID")
 VAPI_BASE_URL = "https://api.vapi.ai"
 
 async def trigger_call(phone_number: str, message: str) -> bool:
@@ -19,7 +20,7 @@ async def trigger_call(phone_number: str, message: str) -> bool:
         }
         
         payload = {
-            "phoneNumberId": None,  # Uses Vapi's default number
+            "phoneNumberId": VAPI_PHONE_NUMBER_ID,
             "customer": {
                 "number": phone_number
             },
@@ -42,6 +43,8 @@ async def trigger_call(phone_number: str, message: str) -> bool:
             }
         }
         
+        print(f"📞 Attempting call to {phone_number}...")
+
         async with httpx.AsyncClient() as client:
             response = await client.post(
                 f"{VAPI_BASE_URL}/call/phone",
@@ -50,8 +53,13 @@ async def trigger_call(phone_number: str, message: str) -> bool:
                 timeout=30.0
             )
             
-            return response.status_code in [200, 201]
+            if response.status_code not in [200, 201]:
+                print(f"❌ Vapi Error {response.status_code}: {response.text}")
+                return False
+            
+            print(f"✅ Vapi Success: {response.json()}")
+            return True
             
     except Exception as e:
-        print(f"Error triggering call: {e}")
+        print(f"❌ Exception in trigger_call: {e}")
         return False
