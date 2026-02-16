@@ -3,7 +3,7 @@
 import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { reminderSchema, type ReminderFormData } from "@/lib/schemas";
-import { useCreateReminder } from "@/hooks/use-reminders";
+import { useCreateReminder, useUpdateReminder } from "@/hooks/use-reminders";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -19,6 +19,13 @@ import { Card } from "@/components/ui/card";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { Loader2 } from "lucide-react";
+import { Reminder } from "@/lib/api";
+import { AxiosError } from "axios";
+import { useEffect } from "react";
+
+interface ApiErrorResponse {
+  detail?: string;
+}
 
 const TIMEZONES = [
   { value: "America/New_York", label: "Eastern Time (ET)" },
@@ -28,49 +35,85 @@ const TIMEZONES = [
   { value: "UTC", label: "UTC" },
 ];
 
-export function ReminderForm() {
+interface ReminderFormProps {
+  initialData?: Reminder;
+}
+
+export function ReminderForm({ initialData }: ReminderFormProps) {
   const router = useRouter();
-  const { mutate: createReminder, isPending } = useCreateReminder();
+  const createReminder = useCreateReminder();
+  const updateReminder = useUpdateReminder();
+
+  const isPending = createReminder.isPending || updateReminder.isPending;
 
   const {
     register,
     handleSubmit,
     setValue,
     control,
+    reset,
     formState: { errors },
   } = useForm<ReminderFormData>({
     resolver: zodResolver(reminderSchema),
-    defaultValues: {
-      timezone: "America/New_York",
-      scheduled_time: (() => {
-        const now = new Date();
-        now.setHours(now.getHours() + 1);
-        now.setMinutes(0);
-        return now.toISOString().slice(0, 16);
-      })(),
-    },
+    defaultValues: initialData
+      ? {
+          title: initialData.title,
+          message: initialData.message,
+          phone_number: initialData.phone_number,
+          scheduled_time: initialData.scheduled_time,
+          timezone: initialData.timezone,
+        }
+      : {
+          timezone: "America/New_York",
+        },
   });
+
+  useEffect(() => {
+    if (initialData) {
+      reset({
+        title: initialData.title,
+        message: initialData.message,
+        phone_number: initialData.phone_number,
+        scheduled_time: initialData.scheduled_time,
+        timezone: initialData.timezone,
+      });
+    }
+  }, [initialData, reset]);
 
   const scheduledTime = useWatch({ control, name: "scheduled_time" });
   const timezone = useWatch({ control, name: "timezone" });
 
   const onSubmit = (data: ReminderFormData) => {
-    const payload = {
-      ...data,
-      scheduled_time: `${data.scheduled_time}:00`,
-    };
-
-    createReminder(payload, {
-      onSuccess: () => {
-        toast.success("Reminder created successfully!");
-        router.push("/");
-      },
-      onError: (error: unknown) => {
-        const message =
-          error instanceof Error ? error.message : "Failed to create reminder";
-        toast.error(message);
-      },
-    });
+    if (initialData) {
+      updateReminder.mutate(
+        { id: initialData.id, data },
+        {
+          onSuccess: () => {
+            toast.success("Reminder updated successfully!");
+            router.push("/");
+          },
+          onError: (error: Error) => {
+            const axiosError = error as AxiosError<ApiErrorResponse>;
+            toast.error(
+              axiosError.response?.data?.detail || "Failed to update reminder"
+            );
+          },
+        }
+      );
+    } else {
+      createReminder.mutate(data, {
+        onSuccess: () => {
+          toast.success("Reminder created successfully!");
+          router.push("/");
+        },
+        onError: (error: Error) => {
+          const axiosError = error as AxiosError<ApiErrorResponse>;
+          toast.error(
+            axiosError.response?.data?.detail || "Failed to create reminder"
+          );
+        },
+      });
+    }
   };
 
   return (
@@ -133,13 +176,10 @@ export function ReminderForm() {
               id="date"
               type="date"
               disabled={isPending}
-              value={scheduledTime ? scheduledTime.split("T")[0] : ""}
+              value={scheduledTime?.split("T")[0] || ""}
               onChange={(e) => {
-                const timePart = e.target.value;
-                const datePart = scheduledTime?.includes("T")
-                  ? scheduledTime.split("T")[0]
-                  : new Date().toLocaleDateString("en-CA");
-                setValue("scheduled_time", `${datePart}T${timePart}`, {
+                const currentTime = scheduledTime?.split("T")[1] || "12:00";
+                setValue("scheduled_time", `${e.target.value}T${currentTime}`, {
                   shouldValidate: true,
                 });
               }}
@@ -152,15 +192,13 @@ export function ReminderForm() {
               id="time"
               type="time"
               disabled={isPending}
-              value={
-                scheduledTime?.includes("T") ? scheduledTime.split("T")[1] : ""
-              }
+              value={scheduledTime?.split("T")[1]?.slice(0, 5) || ""}
               onChange={(e) => {
-                const timePart = e.target.value;
-                const datePart = scheduledTime?.includes("T")
-                  ? scheduledTime.split("T")[0]
-                  : new Date().toISOString().split("T")[0];
-                setValue("scheduled_time", `${datePart}T${timePart}`, {
+                const currentDate =
+                  scheduledTime?.split("T")[0] ||
+                  new Date().toISOString().split("T")[0];
+                // Ensure seconds are 00 for cleaner input
+                setValue("scheduled_time", `${currentDate}T${e.target.value}:00`, {
                   shouldValidate: true,
                 });
               }}
@@ -212,7 +250,7 @@ export function ReminderForm() {
           </Button>
           <Button type="submit" className="flex-1" disabled={isPending}>
             {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            Create Reminder
+            {initialData ? "Update Reminder" : "Create Reminder"}
           </Button>
         </div>
       </form>

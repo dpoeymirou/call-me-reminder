@@ -16,8 +16,9 @@ import { Reminder } from "@/lib/api";
 import { useDeleteReminder } from "@/hooks/use-reminders";
 import { toast } from "sonner";
 import { formatDistanceToNow, format } from "date-fns";
-import { Phone, Trash2, Clock } from "lucide-react";
+import { Phone, Trash2, Clock, Pencil } from "lucide-react";
 import { useState } from "react";
+import Link from "next/link";
 
 function maskPhone(phone: string) {
   if (phone.length <= 6) return phone;
@@ -28,7 +29,10 @@ export function ReminderCard({ reminder }: { reminder: Reminder }) {
   const [open, setOpen] = useState(false);
   const { mutate: deleteReminder, isPending } = useDeleteReminder();
 
-  const scheduledDate = new Date(reminder.scheduled_time);
+  const scheduledDate = new Date(
+    reminder.scheduled_time +
+      (reminder.scheduled_time.endsWith("Z") ? "" : "Z"),
+  );
   const isUpcoming = scheduledDate > new Date();
 
   const handleDelete = () => {
@@ -77,42 +81,55 @@ export function ReminderCard({ reminder }: { reminder: Reminder }) {
           </div>
         </div>
 
-        <Dialog open={open} onOpenChange={setOpen}>
-          <DialogTrigger asChild>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="text-muted-foreground hover:text-destructive"
-            >
-              <Trash2 className="h-4 w-4" />
-            </Button>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Delete Reminder</DialogTitle>
-              <DialogDescription>
-                Are you sure you want to delete &quot;{reminder.title}&quot;?
-                This action cannot be undone.
-              </DialogDescription>
-            </DialogHeader>
-            <DialogFooter>
+        <div className="flex items-center gap-1">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8 text-muted-foreground hover:text-primary"
+            asChild
+          >
+            <Link href={`/edit/${reminder.id}`}>
+              <Pencil className="h-4 w-4" />
+            </Link>
+          </Button>
+
+          <Dialog open={open} onOpenChange={setOpen}>
+            <DialogTrigger asChild>
               <Button
-                variant="outline"
-                onClick={() => setOpen(false)}
-                disabled={isPending}
+                variant="ghost"
+                size="icon"
+                className="text-muted-foreground hover:text-destructive"
               >
-                Cancel
+                <Trash2 className="h-4 w-4" />
               </Button>
-              <Button
-                variant="destructive"
-                onClick={handleDelete}
-                disabled={isPending}
-              >
-                {isPending ? "Deleting..." : "Delete"}
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Delete Reminder</DialogTitle>
+                <DialogDescription>
+                  Are you sure you want to delete &quot;{reminder.title}&quot;?
+                  This action cannot be undone.
+                </DialogDescription>
+              </DialogHeader>
+              <DialogFooter>
+                <Button
+                  variant="outline"
+                  onClick={() => setOpen(false)}
+                  disabled={isPending}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  variant="destructive"
+                  onClick={handleDelete}
+                  disabled={isPending}
+                >
+                  {isPending ? "Deleting..." : "Delete"}
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+        </div>
       </div>
     </Card>
   );

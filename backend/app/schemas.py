@@ -31,15 +31,17 @@ class ReminderCreate(ReminderBase):
         except Exception:
             tz = pytz.UTC
 
+        # Get current time in the target timezone
         now = datetime.now(tz)
 
+        # Make input 'v' timezone-aware if it isn't already
         if v.tzinfo is None:
             v = tz.localize(v)
 
         if v <= now:
             raise ValueError('Scheduled time must be in the future')
 
-        return v
+        return v.astimezone(pytz.UTC).replace(tzinfo=None)
 
 
 class ReminderUpdate(BaseModel):

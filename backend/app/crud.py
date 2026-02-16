@@ -24,6 +24,11 @@ def update_reminder(db: Session, reminder_id: str, reminder_update: schemas.Remi
         return None
     
     update_data = reminder_update.model_dump(exclude_unset=True)
+    
+    if 'scheduled_time' in update_data:
+        new_time = update_data['scheduled_time']
+        db_reminder.status = models.ReminderStatus.scheduled
+        
     for key, value in update_data.items():
         setattr(db_reminder, key, value)
     
