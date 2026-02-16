@@ -2,11 +2,11 @@
 
 A full-stack reminder application that automatically triggers phone calls to users at scheduled times. Built for the Senior Frontend Engineer take-home challenge.
 
-![Dashboard Preview](https://via.placeholder.com/800x400?text=Dashboard+Preview) 
-*(Optional: Replace with a real screenshot if you have time)*
+![Dashboard Preview](./dashboard.png) 
 
 ## ✨ Features
 
+- **🔐 Authentication:** Simple password-based authentication for development (default: `dev123`)
 - **Smart Scheduling:** Create reminders with date, time, and timezone awareness.
 - **Automated Calls:** Backend scheduler triggers real voice calls via Vapi.ai when reminders are due.
 - **Live Dashboard:** Real-time status updates (Scheduled → Completed/Failed).
@@ -64,14 +64,23 @@ npm run dev
 ## 🧪 How to Test the Call Flow
 
 1. Open the **Dashboard** at `http://localhost:3000`.
-2. Click **"New Reminder"**.
-3. Enter your **real phone number** (E.164 format: `+1...`).
-4. Set the time for **2 minutes from now**.
-5. Select your local timezone.
-6. Submit.
-7. Watch the dashboard—the status is `Scheduled`.
-8. Wait 2 minutes... **Your phone will ring!** 📱
-9. The dashboard status will update to `Completed`.
+2. **Login** with password: `dev123`
+3. Click **"New Reminder"**.
+4. Enter your **real phone number** (E.164 format: `+1...`).
+5. Set the time for **2 minutes from now**.
+6. Select your local timezone.
+7. Submit.
+8. Watch the dashboard—the status is `Scheduled`.
+9. Wait 2 minutes... **Your phone will ring!** 📱
+10. The dashboard status will update to `Completed`.
+
+### 🔐 Authentication
+
+The application now includes simple authentication:
+- **Default Password:** `dev123`
+- **Token-based:** JWT tokens with 30-day expiration
+- **Protected Routes:** All reminder endpoints require authentication
+- **Environment Variables:** Set custom password via `DEV_PASSWORD` env var
 
 ## 🏗 Architecture Decisions
 

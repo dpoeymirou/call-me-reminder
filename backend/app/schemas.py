@@ -4,6 +4,13 @@ from typing import Optional
 import re
 import pytz
 
+class LoginRequest(BaseModel):
+    password: str
+
+class Token(BaseModel):
+    access_token: str
+    token_type: str
+
 class ReminderBase(BaseModel):
     title: str = Field(..., min_length=1, max_length=200)
     message: str = Field(..., min_length=1)
