@@ -98,7 +98,7 @@ export function ReminderCard({ reminder }: { reminder: Reminder }) {
               <Button
                 variant="ghost"
                 size="icon"
-                className="text-muted-foreground hover:text-destructive"
+                className="text-muted-foreground hover:text-destructive cursor-pointer"
               >
                 <Trash2 className="h-4 w-4" />
               </Button>
@@ -116,6 +116,7 @@ export function ReminderCard({ reminder }: { reminder: Reminder }) {
                   variant="outline"
                   onClick={() => setOpen(false)}
                   disabled={isPending}
+                  className="cursor-pointer"
                 >
                   Cancel
                 </Button>
@@ -123,6 +124,7 @@ export function ReminderCard({ reminder }: { reminder: Reminder }) {
                   variant="destructive"
                   onClick={handleDelete}
                   disabled={isPending}
+                  className="hover:bg-red-700 cursor-pointer transition-colors"
                 >
                   {isPending ? "Deleting..." : "Delete"}
                 </Button>

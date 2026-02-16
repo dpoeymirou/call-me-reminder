@@ -242,13 +242,13 @@ export function ReminderForm({ initialData }: ReminderFormProps) {
           <Button
             type="button"
             variant="outline"
-            className="flex-1"
+            className="flex-1 cursor-pointer"
             onClick={() => router.push("/")}
             disabled={isPending}
           >
             Cancel
           </Button>
-          <Button type="submit" className="flex-1" disabled={isPending}>
+          <Button type="submit" className="flex-1 cursor-pointer" disabled={isPending}>
             {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
             {initialData ? "Update Reminder" : "Create Reminder"}
           </Button>

@@ -33,14 +33,16 @@ export default function DashboardPage() {
     <div className="min-h-screen bg-background py-12 px-4">
       <div className="max-w-3xl mx-auto space-y-8">
         {/* Header */}
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <h1 className="text-3xl font-bold tracking-tight">Reminders</h1>
-            <p className="text-muted-foreground">
+            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">
+              Reminders
+            </h1>
+            <p className="text-sm sm:text-base text-muted-foreground">
               Manage your upcoming call reminders.
             </p>
           </div>
-          <Button asChild>
+          <Button asChild className="w-full sm:w-auto cursor-pointer shadow-sm">
             <Link href="/create">
               <Plus className="mr-2 h-4 w-4" />
               New Reminder
