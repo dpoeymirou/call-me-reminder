@@ -2,6 +2,7 @@ from pydantic import BaseModel, Field, field_validator
 from datetime import datetime, timezone
 from typing import Optional
 import re
+import pytz
 
 class ReminderBase(BaseModel):
     title: str = Field(..., min_length=1, max_length=200)
@@ -19,16 +20,25 @@ class ReminderBase(BaseModel):
     
     @field_validator('scheduled_time')
     @classmethod
-    def validate_future_time(cls, v):
-        # Make both timezone-aware for comparison
-        now = datetime.now(timezone.utc)
+    def validate_future_time(cls, v, info):
+        # Get timezone from the data being validated
+        tz_str = info.data.get('timezone', 'UTC')
         
-        # If v is naive, assume UTC
+        try:
+            tz = pytz.timezone(tz_str)
+        except:
+            tz = pytz.UTC
+        
+        # Current time in user's timezone
+        now = datetime.now(tz)
+        
+        # Make scheduled_time timezone-aware if naive
         if v.tzinfo is None:
-            v = v.replace(tzinfo=timezone.utc)
+            v = tz.localize(v)
         
         if v <= now:
             raise ValueError('Scheduled time must be in the future')
+        
         return v
 
 class ReminderCreate(ReminderBase):
