@@ -34,13 +34,21 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   useEffect(() => {
     const token = localStorage.getItem("auth_token");
+    const timeouts: NodeJS.Timeout[] = [];
+    
     if (token) {
       api.defaults.headers.common["Authorization"] = `Bearer ${token}`;
       // Use setTimeout to avoid synchronous setState in effect
-      setTimeout(() => setIsAuthenticated(true), 0);
+      const authTimeout = setTimeout(() => setIsAuthenticated(true), 0);
+      timeouts.push(authTimeout);
     }
-    // Use setTimeout to avoid synchronous setState in effect
-    setTimeout(() => setIsLoading(false), 0);
+    
+    const loadingTimeout = setTimeout(() => setIsLoading(false), 0);
+    timeouts.push(loadingTimeout);
+    
+    return () => {
+      timeouts.forEach(timeout => clearTimeout(timeout));
+    };
   }, []);
 
   const login = async (password: string): Promise<boolean> => {
@@ -51,7 +59,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       localStorage.setItem("auth_token", access_token);
       api.defaults.headers.common["Authorization"] = `Bearer ${access_token}`;
 
-      // Use setTimeout to avoid synchronous setState in effect
       setTimeout(() => setIsAuthenticated(true), 0);
       return true;
     } catch (error) {
