@@ -1,8 +1,10 @@
-from fastapi import FastAPI, Depends, HTTPException
+from fastapi import FastAPI, Depends, HTTPException, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 from typing import List, Optional
 from datetime import timedelta
+import json
+import asyncio
 from . import models, schemas, crud, auth
 from .database import engine, get_db
 from .scheduler import start_scheduler
@@ -15,7 +17,7 @@ app = FastAPI(title="Call Me Reminder API")
 # CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],
+    allow_origins=["http://localhost:3000", "ws://localhost:3000"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -100,3 +102,48 @@ def delete_reminder(
     if not success:
         raise HTTPException(status_code=404, detail="Reminder not found")
     return {"message": "Reminder deleted successfully"}
+
+# WebSocket connection manager
+class ConnectionManager:
+    def __init__(self):
+        self.active_connections: list[WebSocket] = []
+
+    async def connect(self, websocket: WebSocket):
+        await websocket.accept()
+        self.active_connections.append(websocket)
+
+    def disconnect(self, websocket: WebSocket):
+        if websocket in self.active_connections:
+            self.active_connections.remove(websocket)
+
+    async def broadcast(self, message: dict):
+        for connection in self.active_connections:
+            try:
+                await connection.send_json(message)
+            except:
+                # Remove dead connections
+                self.disconnect(connection)
+
+manager = ConnectionManager()
+
+# WebSocket endpoint
+@app.websocket("/ws")
+async def websocket_endpoint(websocket: WebSocket):
+    await manager.connect(websocket)
+    try:
+        while True:
+            # Keep connection alive and listen for ping
+            await websocket.receive_text()
+    except WebSocketDisconnect:
+        manager.disconnect(websocket)
+
+# Helper function to broadcast updates
+async def broadcast_reminder_update(reminder_id: str, status: str):
+    message = {
+        "type": "reminder_update",
+        "data": {
+            "id": reminder_id,
+            "status": status
+        }
+    }
+    await manager.broadcast(message)

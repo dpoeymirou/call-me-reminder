@@ -2,7 +2,7 @@ from sqlalchemy import Column, String, DateTime, Enum
 from sqlalchemy.dialects.postgresql import UUID
 import uuid
 import enum
-from datetime import datetime
+from datetime import datetime, timezone
 from .database import Base
 
 class ReminderStatus(str, enum.Enum):

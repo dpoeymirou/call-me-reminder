@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useReminders } from "@/hooks/use-reminders";
+import { useRealTimeUpdates } from "@/hooks/use-real-time-updates";
 import { ReminderCard } from "@/components/reminder-card";
 import { ReminderSkeletonList } from "@/components/reminder-skeleton";
 import { EmptyState } from "@/components/empty-state";
@@ -16,6 +17,9 @@ import { Plus, Search } from "lucide-react";
 export default function DashboardPage() {
   const [filter, setFilter] = useState("all");
   const [search, setSearch] = useState("");
+
+  // Enable real-time updates
+  useRealTimeUpdates();
 
   const {
     data: reminders,

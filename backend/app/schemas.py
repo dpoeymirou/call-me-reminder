@@ -48,7 +48,7 @@ class ReminderCreate(ReminderBase):
         if v <= now:
             raise ValueError('Scheduled time must be in the future')
 
-        return v.astimezone(pytz.UTC).replace(tzinfo=None)
+        return v.astimezone(pytz.UTC)
 
 
 class ReminderUpdate(BaseModel):
